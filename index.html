@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>JS Bin</title>
+  <script src="https://cdn.rawgit.com/gpujs/gpu.js/45103b7f154a12ec639990c6896b21a053eb6a6c/bin/gpu.js"></script>
+  <script src="https://rawgit.com/emn178/js-sha3/master/src/sha3.js"></script>
+
+  </head>
+<body>
+<script type="text/javascript">
+ function hexStringToByte(str) {
+  if (!str) {
+    return new Uint8Array();
+  } 
+  var a = [];
+  for (var i = 0, len = str.length; i < len; i+=2) {
+    a.push(parseInt(str.substr(i,2),16));
+  }
+  return new Uint8Array(a);
+}
+console.log(keccak256("HI"));
+var gpu = new GPU();
+gpu.addFunction(function hash(h){return keccak256(h)});
+
+var challenge = hexStringToByte('a772fcfbc2676e5a9eb8447445b3b31e55ca54abeb85e92097a1bf2241fcd426');
+var sender_addr = hexStringToByte('363b5534fb8b5f615583c7329c9ca8ce6edaf6e6');
+
+
+
+const kernel = gpu.createKernel(function(challenge, sender_addr) {
+	return hash(challenge);
+})
+  .setOutput([20]);
+
+var result = kernel(challenge, sender_addr);
+//console.log(result);
+for(i in result){
+  console.log(i + ": " + result[i]);
+}
+</script>
+
+</body>
+</html>
