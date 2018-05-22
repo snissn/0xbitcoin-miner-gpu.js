@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width">
   <title>JS Bin</title>
   <script src="https://cdn.rawgit.com/gpujs/gpu.js/45103b7f154a12ec639990c6896b21a053eb6a6c/bin/gpu.js"></script>
-  <script src="https://rawgit.com/emn178/js-sha3/master/src/sha3.js"></script>
+  <script src="./keccak256.js"></script>
 
   </head>
 <body>
@@ -20,22 +20,35 @@
   }
   return new Uint8Array(a);
 }
-console.log(keccak256("HI"));
+
+
+
+let challenge = 'a772fcfbc2676e5a9eb8447445b3b31e55ca54abeb85e92097a1bf2241fcd426';
+let sender_addr = '363b5534fb8b5f615583c7329c9ca8ce6edaf6e6';
+let nonce = '417a6c05caa58501ecfb41c3696901a200b90400e2bc11bd0c7d11cd4569202e';
+
+let full_message = hexStringToByte(challenge+sender_addr+nonce);
+
+console.log('test hex str (CPU):', keccak256_get_hex_str(full_message));
+console.log('test top u32 (CPU):', keccak256_get_top_u32(full_message));
+
+
+
 var gpu = new GPU();
-gpu.addFunction(function hash(h){return keccak256(h)});
 
-var challenge = hexStringToByte('a772fcfbc2676e5a9eb8447445b3b31e55ca54abeb85e92097a1bf2241fcd426');
-var sender_addr = hexStringToByte('363b5534fb8b5f615583c7329c9ca8ce6edaf6e6');
+console.log('adding keccack function');
+gpu.addFunction(keccak256_get_top_u32);
 
-
-
-const kernel = gpu.createKernel(function(challenge, sender_addr) {
-	return hash(challenge);
+console.log('create kernel');
+const kernel = gpu.createKernel(function(full_message) {
+	return keccak256_get_top_u32(full_message);
 })
   .setOutput([20]);
 
-var result = kernel(challenge, sender_addr);
-//console.log(result);
+console.log('calculate GPU result')
+var result = kernel(full_message);
+
+// should return 20 zeroes
 for(i in result){
   console.log(i + ": " + result[i]);
 }
